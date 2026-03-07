@@ -1,0 +1,18 @@
+services:
+  jvm-runner:
+    container_name: github-jvm-runner
+    image: ghcr.io/tr1ckyf0x-studio/github-runner-jvm-node:latest
+    platform: ${RUNNER_PLATFORM:-linux/amd64}
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - github-jvm-runner-gradle:/home/runner/.gradle
+      - github-jvm-runner-m2:/home/runner/.m2
+      - github-jvm-runner-npm:/home/runner/.npm
+
+volumes:
+  github-jvm-runner-gradle:
+  github-jvm-runner-m2:
+  github-jvm-runner-npm:
