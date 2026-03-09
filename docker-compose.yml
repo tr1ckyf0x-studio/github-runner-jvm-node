@@ -6,6 +6,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      # Optional: set a custom runner name visible in GitHub Actions UI.
+      # If not set, the runner will use an auto-generated name.
+      RUNNER_NAME: ${RUNNER_NAME:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - github-jvm-runner-gradle:/home/runner/.gradle

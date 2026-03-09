@@ -35,11 +35,15 @@ if [[ -f ".runner" || -f ".credentials" ]]; then
   echo "→ Runner already configured, skipping registration"
 else
   echo "→ Runner not configured, registering…"
-  gosu runner ./config.sh --unattended \
-    --url "https://github.com/${ORG}" \
-    --token "${REG_TOKEN}" \
-    --labels "jvm-runner,jdk25,nvm" \
+  CONFIG_ARGS=(
+    --unattended
+    --url "https://github.com/${ORG}"
+    --token "${REG_TOKEN}"
+    --labels "jvm-runner,jdk25,nvm,has-docker-builder"
     --replace
+  )
+  [[ -n "$RUNNER_NAME" ]] && CONFIG_ARGS+=(--name "$RUNNER_NAME")
+  gosu runner ./config.sh "${CONFIG_ARGS[@]}"
 fi
 
 cleanup() {
