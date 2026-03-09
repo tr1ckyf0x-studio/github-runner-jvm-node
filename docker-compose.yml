@@ -10,13 +10,18 @@ services:
       # Optional: set a custom runner name visible in GitHub Actions UI.
       # If not set, the runner will use an auto-generated name.
       RUNNER_NAME: ${RUNNER_NAME:-}
+      # Persist the actions/setup-node (and other setup-* actions) tool cache
+      # across container restarts so Node.js is not re-downloaded every time.
+      RUNNER_TOOL_CACHE: /opt/hostedtoolcache
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - github-jvm-runner-gradle:/home/runner/.gradle
       - github-jvm-runner-m2:/home/runner/.m2
       - github-jvm-runner-npm:/home/runner/.npm
+      - github-jvm-runner-tool-cache:/opt/hostedtoolcache
 
 volumes:
   github-jvm-runner-gradle:
   github-jvm-runner-m2:
   github-jvm-runner-npm:
+  github-jvm-runner-tool-cache:
