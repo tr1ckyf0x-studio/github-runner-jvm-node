@@ -1,7 +1,7 @@
 services:
   jvm-runner:
     container_name: github-jvm-runner
-    image: ghcr.io/tr1ckyf0x-studio/github-runner-jvm-node:latest
+    image: docker.tr1ckyf0x.dev/tr1ckyf0x-studio/github-runner-jvm-node:latest
     platform: ${RUNNER_PLATFORM:-linux/amd64}
     restart: unless-stopped
     env_file:
@@ -18,6 +18,17 @@ services:
       - github-jvm-runner-gradle:/home/runner/.gradle
       - github-jvm-runner-m2:/home/runner/.m2
       - github-jvm-runner-npm:/home/runner/.npm
+      - github-jvm-runner-tool-cache:/opt/hostedtoolcache
+    depends_on:
+      tool-cache-init:
+        condition: service_completed_successfully
+  # One-shot container that fixes volume ownership before the runner starts.
+  # Runs only when the volume is first created or permissions are wrong.
+  tool-cache-init:
+    image: alpine
+    command: chown -R 1001:1001 /opt/hostedtoolcache
+    user: root
+    volumes:
       - github-jvm-runner-tool-cache:/opt/hostedtoolcache
 
 volumes:
