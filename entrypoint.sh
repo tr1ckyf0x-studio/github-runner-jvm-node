@@ -39,7 +39,7 @@ else
     --unattended
     --url "https://github.com/${ORG}"
     --token "${REG_TOKEN}"
-    --labels "jvm-runner,jdk25,nvm,has-docker-builder"
+    --labels "jvm-runner,jdk25,nvm,android-runner,has-docker-builder"
     --replace
   )
   [[ -n "$RUNNER_NAME" ]] && CONFIG_ARGS+=(--name "$RUNNER_NAME")

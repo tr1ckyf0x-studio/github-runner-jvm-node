@@ -29,6 +29,18 @@ on:
         options:
           - "true"
           - "false"
+      android_commandlinetools_version:
+        description: "Android commandlinetools version"
+        required: false
+        default: "14742923"
+      android_platform_version:
+        description: "Android platform version (e.g. 36)"
+        required: false
+        default: "36"
+      android_build_tools_version:
+        description: "Android build-tools version (e.g. 36.0.0)"
+        required: false
+        default: "36.0.0"
 
 env:
   REGISTRY: ghcr.io
@@ -80,5 +92,8 @@ jobs:
             RUNNER_VERSION=${{ github.event.inputs.runner_version || '2.333.1' }}
             NVM_VERSION=${{ github.event.inputs.nvm_version || '0.40.4' }}
             NODE_VERSION=${{ github.event.inputs.node_version || '24' }}
+            ANDROID_COMMANDLINETOOLS_VERSION=${{ github.event.inputs.android_commandlinetools_version || '14742923' }}
+            ANDROID_PLATFORM_VERSION=${{ github.event.inputs.android_platform_version || '36' }}
+            ANDROID_BUILD_TOOLS_VERSION=${{ github.event.inputs.android_build_tools_version || '36.0.0' }}
           cache-from: ${{ github.event.inputs.use_cache != 'false' && format('type=registry,ref={0}/{1}:buildcache', env.REGISTRY, env.IMAGE_NAME) || '' }}
           cache-to: ${{ github.event.inputs.use_cache != 'false' && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, env.IMAGE_NAME) || '' }}

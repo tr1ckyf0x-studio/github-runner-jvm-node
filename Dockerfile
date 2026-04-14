@@ -27,10 +27,16 @@ FROM eclipse-temurin:25-jdk-noble
 ARG RUNNER_VERSION="2.333.1"
 ARG NVM_VERSION="0.40.4"
 ARG NODE_VERSION="24"
+ARG ANDROID_COMMANDLINETOOLS_VERSION="14742923"
+ARG ANDROID_PLATFORM_VERSION="36"
+ARG ANDROID_BUILD_TOOLS_VERSION="36.0.0"
 
 LABEL org.opencontainers.image.source="https://github.com/tr1ckyf0x-studio/github-runner-jvm-node"
-LABEL org.opencontainers.image.description="GitHub Actions self-hosted runner for JVM applications (JDK 25)"
+LABEL org.opencontainers.image.description="GitHub Actions self-hosted runner for JVM and Android applications (JDK 25)"
 LABEL org.opencontainers.image.licenses="MIT"
+
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 
 RUN useradd -m runner
 
@@ -62,6 +68,20 @@ RUN ./actions-runner/bin/installdependencies.sh && \
     chown -R runner:runner /home/runner
 
 WORKDIR /
+
+# Install Android SDK (commandlinetools, platform-tools, platforms, build-tools)
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
+    wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_COMMANDLINETOOLS_VERSION}_latest.zip" \
+         -O /tmp/cmdline-tools.zip && \
+    unzip -q /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
+    rm /tmp/cmdline-tools.zip && \
+    mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
+    yes | sdkmanager --licenses > /dev/null && \
+    sdkmanager \
+        "platform-tools" \
+        "platforms;android-${ANDROID_PLATFORM_VERSION}" \
+        "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" && \
+    chown -R runner:runner $ANDROID_HOME
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
