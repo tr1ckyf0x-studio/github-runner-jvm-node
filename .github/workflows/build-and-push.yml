@@ -10,37 +10,23 @@ on:
   workflow_dispatch:
     inputs:
       runner_version:
-        description: "GitHub Actions Runner version"
+        description: "GitHub Actions Runner version (leave blank for Dockerfile default)"
         required: false
-        default: "2.333.1"
       nvm_version:
-        description: "nvm version"
+        description: "nvm version (leave blank for Dockerfile default)"
         required: false
-        default: "0.40.4"
       node_version:
-        description: "Default Node.js version (major)"
+        description: "Default Node.js version, major (leave blank for Dockerfile default)"
         required: false
-        default: "24"
-      use_cache:
-        description: "Use build cache"
-        required: false
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
       android_commandlinetools_version:
-        description: "Android commandlinetools version"
+        description: "Android commandlinetools version (leave blank for Dockerfile default)"
         required: false
-        default: "14742923"
       android_platform_version:
-        description: "Android platform version (e.g. 36)"
+        description: "Android platform version, e.g. 36 (leave blank for Dockerfile default)"
         required: false
-        default: "36"
       android_build_tools_version:
-        description: "Android build-tools version (e.g. 36.0.0)"
+        description: "Android build-tools version, e.g. 36.0.0 (leave blank for Dockerfile default)"
         required: false
-        default: "36.0.0"
 
 env:
   REGISTRY: ghcr.io
@@ -89,11 +75,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            RUNNER_VERSION=${{ github.event.inputs.runner_version || '2.333.1' }}
-            NVM_VERSION=${{ github.event.inputs.nvm_version || '0.40.4' }}
-            NODE_VERSION=${{ github.event.inputs.node_version || '24' }}
-            ANDROID_COMMANDLINETOOLS_VERSION=${{ github.event.inputs.android_commandlinetools_version || '14742923' }}
-            ANDROID_PLATFORM_VERSION=${{ github.event.inputs.android_platform_version || '36' }}
-            ANDROID_BUILD_TOOLS_VERSION=${{ github.event.inputs.android_build_tools_version || '36.0.0' }}
-          cache-from: ${{ github.event.inputs.use_cache != 'false' && format('type=registry,ref={0}/{1}:buildcache', env.REGISTRY, env.IMAGE_NAME) || '' }}
-          cache-to: ${{ github.event.inputs.use_cache != 'false' && format('type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, env.IMAGE_NAME) || '' }}
+            ${{ github.event.inputs.runner_version && format('RUNNER_VERSION={0}', github.event.inputs.runner_version) || '' }}
+            ${{ github.event.inputs.nvm_version && format('NVM_VERSION={0}', github.event.inputs.nvm_version) || '' }}
+            ${{ github.event.inputs.node_version && format('NODE_VERSION={0}', github.event.inputs.node_version) || '' }}
+            ${{ github.event.inputs.android_commandlinetools_version && format('ANDROID_COMMANDLINETOOLS_VERSION={0}', github.event.inputs.android_commandlinetools_version) || '' }}
+            ${{ github.event.inputs.android_platform_version && format('ANDROID_PLATFORM_VERSION={0}', github.event.inputs.android_platform_version) || '' }}
+            ${{ github.event.inputs.android_build_tools_version && format('ANDROID_BUILD_TOOLS_VERSION={0}', github.event.inputs.android_build_tools_version) || '' }}
