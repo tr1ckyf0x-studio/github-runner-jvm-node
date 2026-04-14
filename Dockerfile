@@ -3,7 +3,7 @@
 # TARGETARCH is correctly injected by buildx: amd64 or arm64.
 FROM --platform=$BUILDPLATFORM ubuntu:noble AS runner-downloader
 
-ARG RUNNER_VERSION="2.332.0"
+ARG RUNNER_VERSION="2.333.1"
 ARG TARGETARCH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,7 +24,7 @@ RUN case "${TARGETARCH}" in \
 ### Stage 2: final image for the target platform (arm64 or amd64)
 FROM eclipse-temurin:25-jdk-noble
 
-ARG RUNNER_VERSION="2.332.0"
+ARG RUNNER_VERSION="2.333.1"
 ARG NVM_VERSION="0.40.4"
 ARG NODE_VERSION="24"
 

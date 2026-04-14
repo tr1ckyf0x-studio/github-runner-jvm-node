@@ -12,7 +12,7 @@ on:
       runner_version:
         description: "GitHub Actions Runner version"
         required: false
-        default: "2.332.0"
+        default: "2.333.1"
       nvm_version:
         description: "nvm version"
         required: false
@@ -77,7 +77,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            RUNNER_VERSION=${{ github.event.inputs.runner_version || '2.332.0' }}
+            RUNNER_VERSION=${{ github.event.inputs.runner_version || '2.333.1' }}
             NVM_VERSION=${{ github.event.inputs.nvm_version || '0.40.4' }}
             NODE_VERSION=${{ github.event.inputs.node_version || '24' }}
           cache-from: ${{ github.event.inputs.use_cache != 'false' && format('type=registry,ref={0}/{1}:buildcache', env.REGISTRY, env.IMAGE_NAME) || '' }}

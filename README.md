@@ -75,12 +75,12 @@ nvm is pre-installed and available in every step without any extra setup:
 
 ```yaml
 steps:
-  - run: nvm use 20
+  - run: nvm use 24
 
   # or via actions/setup-node (also works)
   - uses: actions/setup-node@v4
     with:
-      node-version: '20'
+      node-version: '24'
 ```
 
 ## Configuration
@@ -89,7 +89,7 @@ All versions are build-time arguments with defaults:
 
 | ARG | Default | Description |
 |---|---|---|
-| `RUNNER_VERSION` | `2.332.0` | GitHub Actions Runner version |
+| `RUNNER_VERSION` | `2.333.1` | GitHub Actions Runner version |
 | `NVM_VERSION` | `0.40.4` | nvm version |
 | `NODE_VERSION` | `24` | Default Node.js major version |
 
@@ -97,8 +97,8 @@ Override at build time:
 
 ```bash
 docker build \
-  --build-arg NODE_VERSION=20 \
-  --build-arg RUNNER_VERSION=2.332.0 \
+  --build-arg NODE_VERSION=24 \
+  --build-arg RUNNER_VERSION=2.333.1 \
   -t github-runner-jvm-node .
 ```
 
