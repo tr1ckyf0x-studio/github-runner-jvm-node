@@ -13,7 +13,11 @@ services:
   # host that carries nothing else valuable.
   dind:
     container_name: github-jvm-runner-dind
-    image: docker:29-dind
+    # Through the Nexus group, like every other image here. Note the `library/`: official Docker Hub
+    # images live in that implicit namespace, and the Docker CLI only fills it in when the registry
+    # *is* Docker Hub. Point at any other host and it must be spelled out — verified against the Hub
+    # API, where /v2/docker/manifests/latest answers 401 and /v2/library/docker/manifests/latest 200.
+    image: docker.tr1ckyf0x.dev/library/docker:29-dind
     platform: ${RUNNER_PLATFORM:-linux/amd64}
     privileged: true
     restart: unless-stopped
@@ -40,6 +44,11 @@ services:
 
   jvm-runner:
     container_name: github-jvm-runner
+    # Not GHCR directly: this is the Nexus proxy in front of it, so the image is cached locally
+    # and a restart does not re-download it across the internet. The path is the upstream one
+    # with `ghcr.io` swapped for the proxy — a Docker proxy mirrors everything after the registry
+    # host. CI publishes to ghcr.io/tr1ckyf0x-studio/github-runner-jvm-node; see the README for the
+    # two Nexus settings this depends on.
     image: docker.tr1ckyf0x.dev/tr1ckyf0x-studio/github-runner-jvm-node:latest
     platform: ${RUNNER_PLATFORM:-linux/amd64}
     restart: unless-stopped
@@ -77,7 +86,7 @@ services:
   # Both volumes are created by Docker owned by root, and the runner is uid 1001 — Ubuntu Noble
   # already has a user at 1000, so `useradd runner` in the image lands on the next one.
   volume-init:
-    image: alpine
+    image: docker.tr1ckyf0x.dev/library/alpine
     command: chown -R 1001:1001 /opt/hostedtoolcache /home/runner/actions-runner/_work
     user: root
     volumes:
