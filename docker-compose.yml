@@ -1,4 +1,43 @@
 services:
+  # The runner's own Docker daemon.
+  #
+  # The alternative — mounting the host's /var/run/docker.sock — is simpler and was what this file
+  # did before. It has one property that ruled it out: every container a workflow starts is then a
+  # sibling on the *host*. Images, containers, volumes and bound ports all accumulate there, and a
+  # workflow that leaks one leaks it onto the machine. Here they are born and die inside this
+  # container instead.
+  #
+  # `privileged` is not optional for a nested daemon, and it is worth being plain about what it
+  # means: a privileged container can reach the host if it tries. So this buys isolation of *state*,
+  # not a security boundary against a hostile workflow. The boundary is the machine — run this on a
+  # host that carries nothing else valuable.
+  dind:
+    container_name: github-jvm-runner-dind
+    image: docker:29-dind
+    platform: ${RUNNER_PLATFORM:-linux/amd64}
+    privileged: true
+    restart: unless-stopped
+    environment:
+      # Empty disables TLS and makes the daemon listen on tcp://0.0.0.0:2375. Acceptable only
+      # because that port is published nowhere: it exists on this compose network and is reachable
+      # by the runner alone. Turning TLS on would mean sharing a certificate volume between the two
+      # containers to protect a link nothing else can reach.
+      DOCKER_TLS_CERTDIR: ""
+    volumes:
+      # Image and layer storage. On a volume so that a restart does not throw away every base image
+      # and every build cache — which is the one real cost of a nested daemon over the host's.
+      - github-jvm-runner-docker:/var/lib/docker
+      # The runner's workspace, mounted at the *same path* in both containers. This is what makes a
+      # `docker run -v "$PWD:/x"` inside a workflow work: the path is resolved by this daemon, in
+      # this filesystem, and the same volume is there under the same name.
+      - github-jvm-runner-work:/home/runner/actions-runner/_work
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
   jvm-runner:
     container_name: github-jvm-runner
     image: docker.tr1ckyf0x.dev/tr1ckyf0x-studio/github-runner-jvm-node:latest
@@ -13,26 +52,42 @@ services:
       # Persist the actions/setup-node (and other setup-* actions) tool cache
       # across container restarts so Node.js is not re-downloaded every time.
       RUNNER_TOOL_CACHE: /opt/hostedtoolcache
+      # Every `docker` command in every workflow goes to the sidecar above. Nothing here talks to
+      # the machine's own daemon, and there is no socket mounted for it to talk to.
+      #
+      # This also settles Testcontainers without any override: given a TCP DOCKER_HOST it addresses
+      # mapped ports through that same host name, which resolves on this network. With a unix socket
+      # it assumes "localhost", which inside a container is the container — the bug this replaces.
+      DOCKER_HOST: tcp://dind:2375
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - github-jvm-runner-gradle:/home/runner/.gradle
       - github-jvm-runner-m2:/home/runner/.m2
       - github-jvm-runner-npm:/home/runner/.npm
       - github-jvm-runner-tool-cache:/opt/hostedtoolcache
+      - github-jvm-runner-work:/home/runner/actions-runner/_work
     depends_on:
-      tool-cache-init:
+      dind:
+        condition: service_healthy
+      volume-init:
         condition: service_completed_successfully
+
   # One-shot container that fixes volume ownership before the runner starts.
-  # Runs only when the volume is first created or permissions are wrong.
-  tool-cache-init:
+  # Runs only when a volume is first created or permissions are wrong.
+  #
+  # Both volumes are created by Docker owned by root, and the runner is uid 1001 — Ubuntu Noble
+  # already has a user at 1000, so `useradd runner` in the image lands on the next one.
+  volume-init:
     image: alpine
-    command: chown -R 1001:1001 /opt/hostedtoolcache
+    command: chown -R 1001:1001 /opt/hostedtoolcache /home/runner/actions-runner/_work
     user: root
     volumes:
       - github-jvm-runner-tool-cache:/opt/hostedtoolcache
+      - github-jvm-runner-work:/home/runner/actions-runner/_work
 
 volumes:
   github-jvm-runner-gradle:
   github-jvm-runner-m2:
   github-jvm-runner-npm:
   github-jvm-runner-tool-cache:
+  github-jvm-runner-work:
+  github-jvm-runner-docker:

@@ -6,7 +6,13 @@ if [[ -z "$ORG" || -z "$GITHUB_ACCESS_TOKEN" ]]; then
   exit 1
 fi
 
-# Grant runner access to the Docker socket.
+# Grant the runner access to a mounted Docker socket, for deployments that still use one.
+#
+# The compose file in this repository does not: it runs a `dind` sidecar and points the runner at it
+# through DOCKER_HOST, so containers started by a workflow stay inside that daemon rather than
+# appearing on the host. None of this runs in that setup — there is no socket to find — and it is
+# kept because mounting one is still a legitimate choice on a host you already trust.
+#
 # Linux: sync the docker group GID with the host socket GID via groupmod.
 # macOS Docker Desktop: socket has GID 0 (root), groupmod cannot reassign it —
 #   fall back to making the socket world-accessible (chmod 666).

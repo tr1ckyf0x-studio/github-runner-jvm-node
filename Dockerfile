@@ -3,7 +3,7 @@
 # TARGETARCH is correctly injected by buildx: amd64 or arm64.
 FROM --platform=$BUILDPLATFORM ubuntu:noble AS runner-downloader
 
-ARG RUNNER_VERSION="2.333.1"
+ARG RUNNER_VERSION="2.336.0"
 ARG TARGETARCH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,10 +24,10 @@ RUN case "${TARGETARCH}" in \
 ### Stage 2: final image for the target platform (arm64 or amd64)
 FROM eclipse-temurin:25-jdk-noble
 
-ARG RUNNER_VERSION="2.333.1"
-ARG NVM_VERSION="0.40.4"
+ARG RUNNER_VERSION="2.336.0"
+ARG NVM_VERSION="0.40.6"
 ARG NODE_VERSION="24"
-ARG ANDROID_COMMANDLINETOOLS_VERSION="14742923"
+ARG ANDROID_COMMANDLINETOOLS_VERSION="15859902"
 ARG ANDROID_PLATFORM_VERSION="36"
 ARG ANDROID_BUILD_TOOLS_VERSION="36.0.0"
 
@@ -53,6 +53,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-client \
     zip \
     docker.io \
+    # `docker.io` ships the CLI and exactly one plugin, docker-trust — `docker buildx` is an unknown
+    # command without this package. That gap matters more than it looks: from Docker 23 the CLI
+    # routes `docker build` through buildx, so without the plugin a build silently falls back to the
+    # legacy builder, where BuildKit-only syntax such as `RUN --mount=type=cache` simply fails. And
+    # multi-platform images cannot be built at all — that needs buildx's `docker-container` driver.
+    # A runner registering itself as `has-docker-builder` should be able to do both.
+    docker-buildx \
     gosu \
     && rm -rf /var/lib/apt/lists/* \
     && usermod -aG docker runner
