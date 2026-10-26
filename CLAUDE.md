@@ -112,3 +112,8 @@ RUNNER_PLATFORM=linux/arm64 docker compose up -d
 ```
 
 The runner is persistent (`restart: unless-stopped`) and non-ephemeral.
+
+The organisation's own runner on the server Earth (`jvm-runner-earth`) is not started by hand: it is
+the Komodo stack `github-runner-jvm-node`. After a push to `main` the `deploy` job posts a signed
+webhook (secrets `DEPLOY_WEBHOOK_URL`, `DEPLOY_WEBHOOK_SECRET`); Komodo pulls the new image from
+GHCR and recreates the runner once no job is running. GitHub has no SSH access to the server.

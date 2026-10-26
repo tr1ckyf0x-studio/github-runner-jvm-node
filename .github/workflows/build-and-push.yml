@@ -81,3 +81,24 @@ jobs:
             ${{ github.event.inputs.android_commandlinetools_version && format('ANDROID_COMMANDLINETOOLS_VERSION={0}', github.event.inputs.android_commandlinetools_version) || '' }}
             ${{ github.event.inputs.android_platform_version && format('ANDROID_PLATFORM_VERSION={0}', github.event.inputs.android_platform_version) || '' }}
             ${{ github.event.inputs.android_build_tools_version && format('ANDROID_BUILD_TOOLS_VERSION={0}', github.event.inputs.android_build_tools_version) || '' }}
+
+  # The server pulls: Komodo on Earth gets a signed webhook, then pulls the new image and recreates
+  # the runner once it has no job running. GitHub has no SSH access to the server. Forks get no
+  # secrets, so a fork's run cannot trigger this.
+  deploy:
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger the Komodo deploy
+        env:
+          URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+        run: |
+          body='{"ref":"${{ github.ref }}"}'
+          sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$SECRET" -hex | sed 's/^.* //')
+          curl -fsS --retry 3 --retry-delay 5 -X POST "$URL" \
+            -H 'Content-Type: application/json' \
+            -H "X-Hub-Signature-256: sha256=$sig" \
+            --data "$body"
