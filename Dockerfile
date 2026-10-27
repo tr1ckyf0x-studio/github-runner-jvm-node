@@ -1,9 +1,9 @@
 ### Stage 1: download the runner binary natively on the build machine (no QEMU)
 # --platform=$BUILDPLATFORM → stage runs on the builder's native arch (amd64).
 # TARGETARCH is correctly injected by buildx: amd64 or arm64.
-FROM --platform=$BUILDPLATFORM ubuntu:noble AS runner-downloader
+FROM --platform=$BUILDPLATFORM ubuntu:resolute AS runner-downloader
 
-ARG RUNNER_VERSION="2.336.0"
+ARG RUNNER_VERSION="2.338.2"
 ARG TARGETARCH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -22,21 +22,23 @@ RUN case "${TARGETARCH}" in \
     tar xzf runner.tar.gz && rm runner.tar.gz
 
 ### Stage 2: final image for the target platform (arm64 or amd64)
-FROM eclipse-temurin:25-jdk-noble
+FROM eclipse-temurin:25-jdk-resolute
 
-ARG RUNNER_VERSION="2.336.0"
-ARG NVM_VERSION="0.40.6"
+ARG RUNNER_VERSION="2.338.2"
+ARG NVM_VERSION="0.40.8"
 ARG NODE_VERSION="24"
-ARG ANDROID_COMMANDLINETOOLS_VERSION="15859902"
-ARG ANDROID_PLATFORM_VERSION="36"
-ARG ANDROID_BUILD_TOOLS_VERSION="36.0.0"
+ARG GRADLE_VERSION="9.8.2"
+ARG ANDROID_COMMANDLINETOOLS_VERSION="16111833"
+ARG ANDROID_PLATFORM_VERSION="37.0"
+ARG ANDROID_BUILD_TOOLS_VERSION="37.0.0"
 
 LABEL org.opencontainers.image.source="https://github.com/tr1ckyf0x-studio/github-runner-jvm-node"
 LABEL org.opencontainers.image.description="GitHub Actions self-hosted runner for JVM and Android applications (JDK 25)"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV ANDROID_HOME=/opt/android-sdk
-ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$GRADLE_HOME/bin
 
 RUN useradd -m runner
 
@@ -89,6 +91,17 @@ RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
         "platforms;android-${ANDROID_PLATFORM_VERSION}" \
         "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" && \
     chown -R runner:runner $ANDROID_HOME
+
+# Install Gradle as a system `gradle`, for projects without a wrapper. A project's own `./gradlew`
+# still downloads the version it pins into ~/.gradle. The checksum file comes from the same host as
+# the archive, so it catches a broken download, not a compromised server.
+RUN wget -q "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
+         -O /tmp/gradle.zip && \
+    echo "$(wget -qO- "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip.sha256")  /tmp/gradle.zip" \
+        | sha256sum -c - && \
+    unzip -q /tmp/gradle.zip -d /opt && \
+    rm /tmp/gradle.zip && \
+    mv /opt/gradle-${GRADLE_VERSION} $GRADLE_HOME
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

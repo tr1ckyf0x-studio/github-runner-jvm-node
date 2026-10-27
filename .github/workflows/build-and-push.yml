@@ -18,14 +18,17 @@ on:
       node_version:
         description: "Default Node.js version, major (leave blank for Dockerfile default)"
         required: false
+      gradle_version:
+        description: "System Gradle version, e.g. 9.8.2 (leave blank for Dockerfile default)"
+        required: false
       android_commandlinetools_version:
         description: "Android commandlinetools version (leave blank for Dockerfile default)"
         required: false
       android_platform_version:
-        description: "Android platform version, e.g. 36 (leave blank for Dockerfile default)"
+        description: "Android platform version, e.g. 37.0 (leave blank for Dockerfile default)"
         required: false
       android_build_tools_version:
-        description: "Android build-tools version, e.g. 36.0.0 (leave blank for Dockerfile default)"
+        description: "Android build-tools version, e.g. 37.0.0 (leave blank for Dockerfile default)"
         required: false
 
 env:
@@ -78,6 +81,7 @@ jobs:
             ${{ github.event.inputs.runner_version && format('RUNNER_VERSION={0}', github.event.inputs.runner_version) || '' }}
             ${{ github.event.inputs.nvm_version && format('NVM_VERSION={0}', github.event.inputs.nvm_version) || '' }}
             ${{ github.event.inputs.node_version && format('NODE_VERSION={0}', github.event.inputs.node_version) || '' }}
+            ${{ github.event.inputs.gradle_version && format('GRADLE_VERSION={0}', github.event.inputs.gradle_version) || '' }}
             ${{ github.event.inputs.android_commandlinetools_version && format('ANDROID_COMMANDLINETOOLS_VERSION={0}', github.event.inputs.android_commandlinetools_version) || '' }}
             ${{ github.event.inputs.android_platform_version && format('ANDROID_PLATFORM_VERSION={0}', github.event.inputs.android_platform_version) || '' }}
             ${{ github.event.inputs.android_build_tools_version && format('ANDROID_BUILD_TOOLS_VERSION={0}', github.event.inputs.android_build_tools_version) || '' }}

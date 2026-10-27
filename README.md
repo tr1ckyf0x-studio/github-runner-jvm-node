@@ -7,6 +7,7 @@ isolated Docker daemon.
 
 - **JDK 25** via Eclipse Temurin
 - **nvm** for switching Node.js versions per project
+- **Gradle** on `PATH` for projects without a wrapper (`./gradlew` still uses the version it pins)
 - **Android SDK** — command-line tools, platform-tools, platform and build-tools
 - **Docker** — client and buildx, talking to a `dind` sidecar rather than the host's daemon, so
   containers started by a workflow never appear on the machine
@@ -103,19 +104,20 @@ All versions are build-time arguments with defaults:
 
 | ARG | Default | Description |
 |---|---|---|
-| `RUNNER_VERSION` | `2.336.0` | GitHub Actions Runner version |
-| `NVM_VERSION` | `0.40.6` | nvm version |
+| `RUNNER_VERSION` | `2.338.2` | GitHub Actions Runner version |
+| `NVM_VERSION` | `0.40.8` | nvm version |
 | `NODE_VERSION` | `24` | Default Node.js major version |
-| `ANDROID_COMMANDLINETOOLS_VERSION` | `15859902` | Android command-line tools build |
-| `ANDROID_PLATFORM_VERSION` | `36` | Android platform API level |
-| `ANDROID_BUILD_TOOLS_VERSION` | `36.0.0` | Android build-tools version |
+| `GRADLE_VERSION` | `9.8.2` | System Gradle version |
+| `ANDROID_COMMANDLINETOOLS_VERSION` | `16111833` | Android command-line tools build |
+| `ANDROID_PLATFORM_VERSION` | `37.0` | Android platform (`platforms;android-<this>`) |
+| `ANDROID_BUILD_TOOLS_VERSION` | `37.0.0` | Android build-tools version |
 
 Override at build time:
 
 ```bash
 docker build \
   --build-arg NODE_VERSION=24 \
-  --build-arg RUNNER_VERSION=2.336.0 \
+  --build-arg RUNNER_VERSION=2.338.2 \
   -t github-runner-jvm-node .
 ```
 
@@ -179,11 +181,12 @@ host
 │    ├── /var/lib/docker  ← volume    (images and build cache survive restarts)
 │    └── containers started by jobs   (never on the host)
 └── jvm-runner                        ← DOCKER_HOST=tcp://dind:2375
-     ├── eclipse-temurin:25-jdk-noble (base)
+     ├── eclipse-temurin:25-jdk-resolute (base)
      ├── GitHub Actions Runner (actions-runner/)
      ├── docker client + buildx       (docker.io + docker-buildx, daemon unused)
      ├── Android SDK (/opt/android-sdk)
      ├── nvm (~/.nvm) + Node.js 24
+     ├── Gradle (/opt/gradle)
      ├── ~/.gradle, ~/.m2, ~/.npm     ← volumes
      └── actions-runner/_work         ← volume, shared with dind at the same path
 ```
@@ -219,7 +222,7 @@ that run under the JDK and work on both. Worth revisiting when a check like this
 `x86-64`:
 
 ```bash
-docker run --rm --platform linux/arm64 eclipse-temurin:25-jdk-noble bash -c \
+docker run --rm --platform linux/arm64 eclipse-temurin:25-jdk-resolute bash -c \
   'apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq wget unzip file >/dev/null 2>&1 \
    && wget -q https://dl.google.com/android/repository/commandlinetools-linux_latest.zip -O /tmp/ct.zip \
    && unzip -q /tmp/ct.zip -d /opt && file -b /opt/cmdline-tools/bin/android'
