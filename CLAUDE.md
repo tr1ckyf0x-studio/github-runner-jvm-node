@@ -2,7 +2,8 @@
 
 GitHub Actions self-hosted runner for JVM + Android builds.
 Supports JDK 25, Android SDK, nvm/Node.js, Gradle (system `gradle` plus the cache), Maven (cache only).
-Multi-platform: `linux/amd64` and `linux/arm64`.
+Platforms: CI publishes `linux/amd64` only (since 2026-10-27); the Dockerfile still builds
+`linux/arm64` locally. Why, and the way back: README, "Known warnings".
 
 ## Architecture
 
@@ -92,8 +93,9 @@ https://developer.android.com/studio#command-line-tools-only
 
 Update `ANDROID_COMMANDLINETOOLS_VERSION` in Dockerfile and the workflow default. It is held at 22.0
 (`15859902`): from 23.0 `sdkmanager` only calls the x86-64-only `bin/android`, so the arm64 build
-fails. Before bumping it, check that `bin/android` has an arm64 build (README, "Known warnings"); a
-local amd64 build does not catch this, only CI's arm64 one does.
+fails. CI builds amd64 only for now, so 23.0 would pass there; it is still held, so that arm64 comes
+back together with the move to the Android CLI (README, "Known warnings"). A local amd64 build never
+catches an arm64 break.
 Every package path and version is also in Google's index,
 https://dl.google.com/android/repository/repository2-3.xml (`channel-0` is stable).
 
@@ -123,7 +125,8 @@ Manual dispatch inputs let you override runner, nvm, Node.js, Gradle, and Androi
 # AMD Ryzen x64 server
 RUNNER_PLATFORM=linux/amd64 docker compose up -d
 
-# Apple M1 (arm64)
+# Apple M1 (arm64): GHCR has no arm64 image for now; build it locally first
+docker build --platform linux/arm64 -t docker.tr1ckyf0x.dev/tr1ckyf0x-studio/github-runner-jvm-node:latest .
 RUNNER_PLATFORM=linux/arm64 docker compose up -d
 ```
 

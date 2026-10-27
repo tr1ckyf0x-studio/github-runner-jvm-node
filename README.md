@@ -12,7 +12,8 @@ isolated Docker daemon.
 - **Docker** — client and buildx, talking to a `dind` sidecar rather than the host's daemon, so
   containers started by a workflow never appear on the machine
 - **Gradle, Maven and npm** caches persisted in Docker volumes
-- **Multi-platform**: `linux/amd64` (x64) and `linux/arm64` (ARM)
+- **Platforms**: CI publishes `linux/amd64` only for now; the Dockerfile still builds `linux/arm64`
+  locally (see Known warnings)
 - **Auto-published** to GHCR on every push to `main`
 
 ## Quick Start
@@ -27,7 +28,8 @@ RUNNER_PLATFORM=linux/amd64
 
 The token requires the `manage_runners:org` permission scope.
 
-> **Apple Silicon (M1/M2/M3):** set `RUNNER_PLATFORM=linux/arm64` to pull the native ARM image.
+> **Apple Silicon (M1/M2/M3):** GHCR has no ARM image for now. Build one locally
+> (`docker build --platform linux/arm64 ...`) and set `RUNNER_PLATFORM=linux/arm64`.
 
 ### 2. Run
 
@@ -223,7 +225,15 @@ scripts that run under the JDK and work on both.
 **cmdline-tools is therefore held at 22.0 (`15859902`).** From 23.0 (`16111833`) on, Google removed
 the Java `sdkmanager` (no `sdkmanager-classpath.jar`): the `sdkmanager` script only forwards to
 `bin/android`, so on arm64 the image build fails with `bin/android: not found` (seen in CI on
-2026-10-27). Worth revisiting when a check like this stops saying `x86-64`:
+2026-10-27).
+
+**CI builds `linux/amd64` only since 2026-10-27.** The way back to arm64 is the Android CLI itself:
+`dl.google.com/android/cli/<version>/linux_arm64/android` exists (an aarch64 ELF with a `.sha256`
+next to it, version 1.1.16717390), but the download page does not list it, so it is not relied on
+yet. When Google lists it (https://developer.android.com/tools/agents/android-cli/download), install
+it per `TARGETARCH`, point `ANDROID_CLI_BIN` at it (the 23.0 `sdkmanager` script honours that
+variable), bump cmdline-tools and put `linux/arm64` back into the workflow. Until then, a check like
+this one tells whether the cmdline-tools archive itself carries an arm64 `android`:
 
 ```bash
 docker run --rm --platform linux/arm64 eclipse-temurin:25-jdk-resolute bash -c \
