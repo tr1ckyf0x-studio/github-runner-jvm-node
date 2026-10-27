@@ -1,20 +1,20 @@
 # github-runner-jvm-node
 
 GitHub Actions self-hosted runner for JVM + Android builds.
-Supports JDK 25, Android SDK, nvm/Node.js, Gradle, Maven.
+Supports JDK 25, Android SDK, nvm/Node.js, Gradle (system `gradle` plus the cache), Maven (cache only).
 Multi-platform: `linux/amd64` and `linux/arm64`.
 
 ## Architecture
 
 ### Dockerfile (multi-stage)
 
-**Stage 1 (`runner-downloader`, `--platform=$BUILDPLATFORM`):**
+**Stage 1 (`runner-downloader`, `ubuntu:resolute`, `--platform=$BUILDPLATFORM`):**
 Runs natively on the build machine. Downloads the GitHub Actions runner binary
 for `$TARGETARCH` (amd64 → x64, arm64 → arm64) without QEMU overhead.
 
-**Stage 2 (final image, `eclipse-temurin:25-jdk-noble`):**
+**Stage 2 (final image, `eclipse-temurin:25-jdk-resolute`, Ubuntu 26.04):**
 Runs on the target platform. Installs system dependencies, copies the runner
-binary from Stage 1, installs Android SDK, then installs nvm + Node.js as the
+binary from Stage 1, installs Android SDK and Gradle, then installs nvm + Node.js as the
 `runner` user. Entrypoint runs as root (Docker socket GID sync) and drops
 privileges via `gosu`.
 
@@ -22,12 +22,13 @@ privileges via `gosu`.
 
 | ARG | Default | Purpose |
 |-----|---------|---------|
-| `RUNNER_VERSION` | `2.333.1` | GitHub Actions runner release |
-| `NVM_VERSION` | `0.40.4` | nvm release |
+| `RUNNER_VERSION` | `2.338.2` | GitHub Actions runner release |
+| `NVM_VERSION` | `0.40.8` | nvm release |
 | `NODE_VERSION` | `24` | Default Node.js major version |
-| `ANDROID_COMMANDLINETOOLS_VERSION` | `14742923` | Android cmdline-tools ZIP version |
-| `ANDROID_PLATFORM_VERSION` | `36` | `platforms;android-XX` |
-| `ANDROID_BUILD_TOOLS_VERSION` | `36.0.0` | `build-tools;X.Y.Z` |
+| `GRADLE_VERSION` | `9.8.2` | System Gradle in `/opt/gradle` (`GRADLE_HOME`, on `PATH`) |
+| `ANDROID_COMMANDLINETOOLS_VERSION` | `16111833` | Android cmdline-tools ZIP version |
+| `ANDROID_PLATFORM_VERSION` | `37.0` | `platforms;android-XX` (from API 36.1 on, with a minor: `37.0`, `37.1`) |
+| `ANDROID_BUILD_TOOLS_VERSION` | `37.0.0` | `build-tools;X.Y.Z` |
 
 ### ENV Variables (Runtime)
 
@@ -90,6 +91,18 @@ Find the latest `commandlinetools` version number at:
 https://developer.android.com/studio#command-line-tools-only
 
 Update `ANDROID_COMMANDLINETOOLS_VERSION` in Dockerfile and the workflow default.
+Every package path and version is also in Google's index,
+https://dl.google.com/android/repository/repository2-3.xml (`channel-0` is stable).
+
+### Update Gradle
+
+The newest version is at https://services.gradle.org/versions/current. Bump `GRADLE_VERSION` in
+the Dockerfile; the build checks the archive against the `.sha256` published next to it.
+
+### Base image
+
+The runner user must stay uid 1001: the deployed compose chowns its volumes to `1001:1001`. That
+holds because the Ubuntu base already has `ubuntu` at 1000, so check `id runner` after changing it.
 
 ## CI/CD
 
@@ -99,7 +112,7 @@ to `main` (Dockerfile or entrypoint.sh changes) and on manual dispatch.
 Registry: `ghcr.io/tr1ckyf0x-studio/github-runner-jvm-node`
 Local mirror: `docker.tr1ckyf0x.dev/tr1ckyf0x-studio/github-runner-jvm-node`
 
-Manual dispatch inputs let you override runner, nvm, Node.js, and Android SDK versions.
+Manual dispatch inputs let you override runner, nvm, Node.js, Gradle, and Android SDK versions.
 
 ## Deployment
 
