@@ -108,7 +108,7 @@ All versions are build-time arguments with defaults:
 | `NVM_VERSION` | `0.40.8` | nvm version |
 | `NODE_VERSION` | `24` | Default Node.js major version |
 | `GRADLE_VERSION` | `9.8.2` | System Gradle version |
-| `ANDROID_COMMANDLINETOOLS_VERSION` | `16111833` | Android command-line tools build |
+| `ANDROID_COMMANDLINETOOLS_VERSION` | `15859902` | Android command-line tools build (22.0; held, see Known warnings) |
 | `ANDROID_PLATFORM_VERSION` | `37.0` | Android platform (`platforms;android-<this>`) |
 | `ANDROID_BUILD_TOOLS_VERSION` | `37.0.0` | Android build-tools version |
 
@@ -217,9 +217,13 @@ host
 **`The SDK Manager CLI tool (sdkmanager) is deprecated. Use Android CLI instead.`** — printed on every
 build, and deliberately not acted on. The replacement `android` binary shipped in
 `commandlinetools-linux` is an **x86-64 ELF executable**, and the archive contains no arm64 build of
-it, so switching would break the `linux/arm64` image. `sdkmanager` and `avdmanager` are shell scripts
-that run under the JDK and work on both. Worth revisiting when a check like this stops saying
-`x86-64`:
+it, so switching would break the `linux/arm64` image. In 22.0 `sdkmanager` and `avdmanager` are shell
+scripts that run under the JDK and work on both.
+
+**cmdline-tools is therefore held at 22.0 (`15859902`).** From 23.0 (`16111833`) on, Google removed
+the Java `sdkmanager` (no `sdkmanager-classpath.jar`): the `sdkmanager` script only forwards to
+`bin/android`, so on arm64 the image build fails with `bin/android: not found` (seen in CI on
+2026-10-27). Worth revisiting when a check like this stops saying `x86-64`:
 
 ```bash
 docker run --rm --platform linux/arm64 eclipse-temurin:25-jdk-resolute bash -c \

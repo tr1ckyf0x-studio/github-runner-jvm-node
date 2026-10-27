@@ -26,7 +26,7 @@ privileges via `gosu`.
 | `NVM_VERSION` | `0.40.8` | nvm release |
 | `NODE_VERSION` | `24` | Default Node.js major version |
 | `GRADLE_VERSION` | `9.8.2` | System Gradle in `/opt/gradle` (`GRADLE_HOME`, on `PATH`) |
-| `ANDROID_COMMANDLINETOOLS_VERSION` | `16111833` | Android cmdline-tools ZIP version |
+| `ANDROID_COMMANDLINETOOLS_VERSION` | `15859902` | Android cmdline-tools ZIP version (22.0, held) |
 | `ANDROID_PLATFORM_VERSION` | `37.0` | `platforms;android-XX` (from API 36.1 on, with a minor: `37.0`, `37.1`) |
 | `ANDROID_BUILD_TOOLS_VERSION` | `37.0.0` | `build-tools;X.Y.Z` |
 
@@ -90,7 +90,10 @@ docker compose up
 Find the latest `commandlinetools` version number at:
 https://developer.android.com/studio#command-line-tools-only
 
-Update `ANDROID_COMMANDLINETOOLS_VERSION` in Dockerfile and the workflow default.
+Update `ANDROID_COMMANDLINETOOLS_VERSION` in Dockerfile and the workflow default. It is held at 22.0
+(`15859902`): from 23.0 `sdkmanager` only calls the x86-64-only `bin/android`, so the arm64 build
+fails. Before bumping it, check that `bin/android` has an arm64 build (README, "Known warnings"); a
+local amd64 build does not catch this, only CI's arm64 one does.
 Every package path and version is also in Google's index,
 https://dl.google.com/android/repository/repository2-3.xml (`channel-0` is stable).
 
