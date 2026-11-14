@@ -92,12 +92,12 @@ nvm is pre-installed and available in every step without any extra setup:
 
 ```yaml
 steps:
-  - run: nvm use 24
+  - run: nvm use 26
 
   # or via actions/setup-node (also works)
   - uses: actions/setup-node@v7
     with:
-      node-version: '24'
+      node-version: '26'
 ```
 
 ## Configuration
@@ -107,9 +107,9 @@ All versions are build-time arguments with defaults:
 | ARG | Default | Description |
 |---|---|---|
 | `RUNNER_VERSION` | `2.338.2` | GitHub Actions Runner version |
-| `NVM_VERSION` | `0.40.8` | nvm version |
-| `NODE_VERSION` | `24` | Default Node.js major version |
-| `GRADLE_VERSION` | `9.8.2` | System Gradle version |
+| `NVM_VERSION` | `0.41.0` | nvm version |
+| `NODE_VERSION` | `26` | Default Node.js major version |
+| `GRADLE_VERSION` | `9.9.1` | System Gradle version |
 | `ANDROID_COMMANDLINETOOLS_VERSION` | `15859902` | Android command-line tools build (22.0; held, see Known warnings) |
 | `ANDROID_PLATFORM_VERSION` | `37.0` | Android platform (`platforms;android-<this>`) |
 | `ANDROID_BUILD_TOOLS_VERSION` | `37.0.0` | Android build-tools version |
@@ -118,7 +118,7 @@ Override at build time:
 
 ```bash
 docker build \
-  --build-arg NODE_VERSION=24 \
+  --build-arg NODE_VERSION=26 \
   --build-arg RUNNER_VERSION=2.338.2 \
   -t github-runner-jvm-node .
 ```
@@ -187,7 +187,7 @@ host
      ├── GitHub Actions Runner (actions-runner/)
      ├── docker client + buildx       (docker.io + docker-buildx, daemon unused)
      ├── Android SDK (/opt/android-sdk)
-     ├── nvm (~/.nvm) + Node.js 24
+     ├── nvm (~/.nvm) + Node.js 26
      ├── Gradle (/opt/gradle)
      ├── ~/.gradle, ~/.m2, ~/.npm     ← volumes
      └── actions-runner/_work         ← volume, shared with dind at the same path

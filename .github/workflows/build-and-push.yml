@@ -19,7 +19,7 @@ on:
         description: "Default Node.js version, major (leave blank for Dockerfile default)"
         required: false
       gradle_version:
-        description: "System Gradle version, e.g. 9.8.2 (leave blank for Dockerfile default)"
+        description: "System Gradle version, e.g. 9.9.1 (leave blank for Dockerfile default)"
         required: false
       android_commandlinetools_version:
         description: "Android commandlinetools version (leave blank for Dockerfile default)"

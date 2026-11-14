@@ -25,9 +25,9 @@ RUN case "${TARGETARCH}" in \
 FROM eclipse-temurin:25-jdk-resolute
 
 ARG RUNNER_VERSION="2.338.2"
-ARG NVM_VERSION="0.40.8"
-ARG NODE_VERSION="24"
-ARG GRADLE_VERSION="9.8.2"
+ARG NVM_VERSION="0.41.0"
+ARG NODE_VERSION="26"
+ARG GRADLE_VERSION="9.9.1"
 # Held at 22.0 (15859902): from 23.0 on `sdkmanager` only calls the x86-64-only `android` binary,
 # which breaks the linux/arm64 image. See "Known warnings" in README.md.
 ARG ANDROID_COMMANDLINETOOLS_VERSION="15859902"
