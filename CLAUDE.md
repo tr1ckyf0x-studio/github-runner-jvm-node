@@ -136,3 +136,7 @@ The organisation's own runner on the server Earth (`jvm-runner-earth`) is not st
 the Komodo stack `github-runner-jvm-node`. After a push to `main` the `deploy` job posts a signed
 webhook (secrets `DEPLOY_WEBHOOK_URL`, `DEPLOY_WEBHOOK_SECRET`); Komodo pulls the new image from
 GHCR and recreates the runner once no job is running. GitHub has no SSH access to the server.
+The webhook is not the only path: the stack also has `poll_for_updates` and `auto_update`, so if a
+webhook is lost, Komodo's next update check (every 15 min) finds the new `latest` digest and deploys
+it the same way. The second runner, `jvm-runner-mars` (stack `github-runner-jvm-node-mars`), has no
+webhook at all and gets new images only this way, including after Mars was switched off.
